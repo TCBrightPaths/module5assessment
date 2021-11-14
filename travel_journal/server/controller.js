@@ -1,4 +1,16 @@
+require('dotenv').config()
+const { CONNECTION_STRING } = process.env
 
+const Sequelize = require('sequelize')
+
+let sequelize = new Sequelize (CONNECTION_STRING, {
+    dialect: 'postgres',
+    dialectOptions: {
+        ssl: {
+            rejectUnauthorized: false
+        }
+    }
+}) 
 
 module.exports = {
     seed: (req, res) => {
@@ -11,7 +23,13 @@ module.exports = {
                 name varchar
             );
 
-            *****YOUR CODE HERE*****
+            CREATE TABLE cities (
+                city_id SERIAL PRIMARY KEY,
+                name VARCHAR(255),
+                rating INTEGER,
+                country_id INTEGER,
+                FOREIGN KEY (country_id) REFERENCES countries(country_id)
+            );
 
             insert into countries (name)
             values ('Afghanistan'),
@@ -213,5 +231,39 @@ module.exports = {
             console.log('DB seeded!')
             res.sendStatus(200)
         }).catch(err => console.log('error seeding DB', err))
+    },
+    getCountries: (req, res) => {
+        sequelize.query(`
+            SELECT * FROM countries;
+        `)
+            .then(dbRes => res.status(200).send(dbRes[0]))
+    }, 
+    createCity: (res, req) => {
+        let {name, rating, countryID} = req.body
+        sequelize.query(`
+            INSERT INTO cities (name, rating, countryID)
+            VALUES (${name}, ${rating}, ${countryID});
+        `)
+            .then(dbRes => res.status(200).send(dbRes[0]))
+    },
+    getCities: (req, res) => {
+        sequelize.query(`
+        SELECT city_id, cities.name city, rating, countries.country_id, countries.name country
+        FROM cities
+          JOIN countries 
+            ON cities.country_id = countries.country_id
+        ORDER BY rating DESC;
+
+        `)
+            .then(dbRes => res.status(200).send(dbRes[0]))
+    },
+    deleteCity: (req, res) => {
+        let {cityID} = req.params
+        sequelize.query(`
+        DELETE 
+        FROM cities
+        WHERE city_id = ${cityID};
+        `)
+            .then(dbRes => res.status(200).send(dbRes[0]))
     }
 }
