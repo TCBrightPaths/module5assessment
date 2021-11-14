@@ -27,8 +27,8 @@ module.exports = {
                 city_id SERIAL PRIMARY KEY,
                 name VARCHAR(255),
                 rating INTEGER,
-                country_id INTEGER,
-                FOREIGN KEY (country_id) REFERENCES countries(country_id)
+                countryId INTEGER,
+                FOREIGN KEY (countryId) REFERENCES countries
             );
 
             insert into countries (name)
@@ -238,31 +238,31 @@ module.exports = {
         `)
             .then(dbRes => res.status(200).send(dbRes[0]))
     }, 
-    createCity: (res, req) => {
-        let {name, rating, countryID} = req.body
+    createCity: (req, res) => {
+        let {name, rating, countryId} = req.body
         sequelize.query(`
-            INSERT INTO cities (name, rating, countryID)
-            VALUES (${name}, ${rating}, ${countryID});
+            INSERT INTO cities (name, rating, countryId)
+            VALUES ('${name}', ${rating}, ${countryId});
         `)
             .then(dbRes => res.status(200).send(dbRes[0]))
     },
     getCities: (req, res) => {
         sequelize.query(`
-        SELECT city_id, cities.name city, rating, countries.country_id, countries.name country
+        SELECT city_id, cities.name AS city, rating, countries.country_id, countries.name AS country
         FROM cities
           JOIN countries 
-            ON cities.country_id = countries.country_id
+            ON cities.countryId = countries.country_id
         ORDER BY rating DESC;
 
         `)
             .then(dbRes => res.status(200).send(dbRes[0]))
     },
     deleteCity: (req, res) => {
-        let {cityID} = req.params
+        let {id} = req.params
         sequelize.query(`
         DELETE 
         FROM cities
-        WHERE city_id = ${cityID};
+        WHERE city_id = ${id};
         `)
             .then(dbRes => res.status(200).send(dbRes[0]))
     }
